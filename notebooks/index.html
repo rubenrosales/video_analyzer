@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Analysis Feedback</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash/4.17.21/lodash.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --background-color: #f8fafc;
+            --text-color: #1e293b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .config-section {
+            grid-column: 1 / -1;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .config-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .config-form label {
+            font-weight: bold;
+        }
+
+        .config-form input {
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        .save-config {
+            grid-column: 1 / -1;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+
+        .save-config:hover {
+            background: var(--secondary-color);
+        }
+
+        .video-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .video-player {
+            width: 100%;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .feedback-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+
+        .feedback-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .nav-button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .nav-button:hover {
+            background: var(--secondary-color);
+        }
+
+        .nav-button.active {
+            background: var(--secondary-color);
+        }
+
+        .feedback-content {
+            display: none;
+        }
+
+        .feedback-content.active {
+            display: block;
+        }
+
+        .feedback-item {
+            border-left: 3px solid var(--primary-color);
+            padding: 10px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .feedback-item:hover {
+            background: #f1f5f9;
+        }
+
+        .timestamp {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .file-selector {
+            margin-bottom: 20px;
+            padding: 10px;
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="config-section">
+            <form id="configForm" class="config-form">
+                <label for="videoPath">Videos Directory:</label>
+                <input type="text" id="videoPath" name="videoPath" placeholder="Path to videos directory">
+                
+                <label for="jsonPath">Analysis JSON File:</label>
+                <input type="text" id="jsonPath" name="jsonPath" placeholder="Path to processed_videos.json">
+                
+                <button type="submit" class="save-config">Save Configuration</button>
+            </form>
+        </div>
+
+        <div class="video-section">
+            <select id="fileSelector" class="file-selector">
+                <option value="">Select a video file...</option>
+            </select>
+            <video id="videoPlayer" class="video-player" controls>
+                Your browser does not support the video element.
+            </video>
+        </div>
+
+        <div class="feedback-section">
+            <div class="feedback-nav">
+                <button class="nav-button active" data-section="mistakes">Mistakes</button>
+                <button class="nav-button" data-section="repeated">Repeated Errors</button>
+                <button class="nav-button" data-section="opportunities">Opportunities</button>
+            </div>
+
+            <div id="mistakes" class="feedback-content active"></div>
+            <div id="repeated" class="feedback-content"></div>
+            <div id="opportunities" class="feedback-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration management
+        class Config {
+            constructor() {
+                this.videoPath = localStorage.getItem('videoPath') || 'data/videos';
+                this.jsonPath = localStorage.getItem('jsonPath') || 'data/processed_videos.json';
+                this.loadConfigToForm();
+            }
+
+            saveConfig(videoPath, jsonPath) {
+                this.videoPath = videoPath;
+                this.jsonPath = jsonPath;
+                localStorage.setItem('videoPath', videoPath);
+                localStorage.setItem('jsonPath', jsonPath);
+            }
+
+            loadConfigToForm() {
+                document.getElementById('videoPath').value = this.videoPath;
+                document.getElementById('jsonPath').value = this.jsonPath;
+            }
+        }
+
+        // State management
+        let currentAnalysis = null;
+        let config = new Config();
+        const videoPlayer = document.getElementById('videoPlayer');
+        const fileSelector = document.getElementById('fileSelector');
+
+        // Config form handler
+        document.getElementById('configForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const videoPath = document.getElementById('videoPath').value.trim();
+            const jsonPath = document.getElementById('jsonPath').value.trim();
+            config.saveConfig(videoPath, jsonPath);
+            loadAnalysisData(); // Reload with new configuration
+        });
+
+        // Convert timestamp to seconds
+        function timeToSeconds(timestamp) {
+            const [hours, minutes, seconds] = timestamp.split(':').map(Number);
+            return hours * 3600 + minutes * 60 + seconds;
+        }
+
+        // Jump to specific timestamp in video
+        function jumpToTimestamp(timestamp) {
+            videoPlayer.currentTime = timeToSeconds(timestamp);
+            videoPlayer.play();
+        }
+
+        // Create feedback item HTML
+        function createMistakeItem(mistake) {
+            return `
+                <div class="feedback-item" onclick="jumpToTimestamp('${mistake.timestamp}')">
+                    <div class="timestamp">${mistake.timestamp}</div>
+                    <div><strong>Description:</strong> ${mistake.description}</div>
+                    <div><strong>Why Incorrect:</strong> ${mistake.why_incorrect}</div>
+                    <div><strong>Better Alternative:</strong> ${mistake.better_alternative}</div>
+                    <div><strong>Expected Benefit:</strong> ${mistake.expected_benefit}</div>
+                </div>
+            `;
+        }
+
+        function createRepeatedErrorItem(error) {
+            return `
+                <div class="feedback-item">
+                    <div><strong>Pattern:</strong> ${error.pattern}</div>
+                    <div><strong>Occurrences:</strong> ${error.occurrences.join(', ')}</div>
+                    <div><strong>Fix:</strong> ${error.fix}</div>
+                </div>
+            `;
+        }
+
+        function createOpportunityItem(opportunity) {
+            return `
+                <div class="feedback-item" onclick="jumpToTimestamp('${opportunity.timestamp}')">
+                    <div class="timestamp">${opportunity.timestamp}</div>
+                    <div><strong>Missed Action:</strong> ${opportunity.missed_action}</div>
+                    <div><strong>Expected Outcome:</strong> ${opportunity.expected_outcome}</div>
+                </div>
+            `;
+        }
+
+        // Update feedback content
+        function updateFeedbackContent(analysis) {
+            document.getElementById('mistakes').innerHTML = 
+                analysis.mistakes.map(createMistakeItem).join('');
+            
+            document.getElementById('repeated').innerHTML = 
+                analysis.repeated_errors.map(createRepeatedErrorItem).join('');
+            
+            document.getElementById('opportunities').innerHTML = 
+                analysis.missed_opportunities.map(createOpportunityItem).join('');
+        }
+
+        // Navigation between feedback sections
+        document.querySelectorAll('.nav-button').forEach(button => {
+            button.addEventListener('click', () => {
+                // Update active button
+                document.querySelectorAll('.nav-button').forEach(btn => 
+                    btn.classList.remove('active'));
+                button.classList.add('active');
+
+                // Show corresponding content
+                document.querySelectorAll('.feedback-content').forEach(content => 
+                    content.classList.remove('active'));
+                document.getElementById(button.dataset.section).classList.add('active');
+            });
+        });
+
+        // Load analysis data
+        async function loadAnalysisData() {
+            try {
+                const response = await fetch(config.jsonPath);
+                const data = await response.json();
+                
+                // Populate file selector
+                fileSelector.innerHTML = '<option value="">Select a video file...</option>' +
+                    Object.keys(data).map(filename => 
+                        `<option value="${filename}">${filename}</option>`
+                    ).join('');
+
+                // File selection handler
+                fileSelector.addEventListener('change', (e) => {
+                    const selectedFile = e.target.value;
+                    if (selectedFile) {
+                        currentAnalysis = data[selectedFile];
+                        updateFeedbackContent(currentAnalysis);
+                        
+                        // Update video source using configured path
+                        videoPlayer.src = `${config.videoPath}/${selectedFile}`;
+                        videoPlayer.load();
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error loading analysis data:', error);
+            }
+        }
+
+        // Initialize
+        loadAnalysisData();
+    </script>
+</body>
+</html>

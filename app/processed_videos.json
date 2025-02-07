@@ -1,0 +1,129 @@
+{
+    "videoplayback (2)111.mp4": {
+        "game": "EA FC 24",
+        "key_focus_areas": [
+            "Defensive positioning & awareness",
+            "Passing accuracy & decision-making",
+            "Shot selection & execution",
+            "Set piece strategy & execution"
+        ],
+        "mistakes": [
+            {
+                "timestamp": "00:55:45",
+                "description": "Penalty taken with low power and directly at the keeper.",
+                "why_incorrect": "Shooting with low power made it easy for the keeper to save the ball. The shot was also aimed centrally, giving the goalkeeper a greater chance of making the save.",
+                "better_alternative": "Power up the shot more and aim either to the left or right of the goalkeeper. Vary the shot power and placement.",
+                "expected_benefit": "Higher shot power and better placement would make it far more difficult for the keeper to save."
+            },
+            {
+                "timestamp": "01:03:00",
+                "description": "Penalty taken with low power and directly at the keeper.",
+                "why_incorrect": "Shooting with low power made it easy for the keeper to save the ball. The shot was also aimed centrally, giving the goalkeeper a greater chance of making the save.",
+                "better_alternative": "Power up the shot more and aim either to the left or right of the goalkeeper. Vary the shot power and placement.",
+                "expected_benefit": "Higher shot power and better placement would make it far more difficult for the keeper to save."
+            },
+            {
+                "timestamp": "02:01:00",
+                "description": "Cross aimed centrally.",
+                "why_incorrect": "The cross is sent into a crowded area, making it difficult for any attacker to get a clean header.",
+                "better_alternative": "Aim the cross towards the far post, where there is a Bayern player free from any marking, by using the 'Early Cross' command (LB + Cross Button).",
+                "expected_benefit": "A far-post cross would give that player a better chance of winning the header and potentially scoring."
+            },
+            {
+                "timestamp": "03:59:00",
+                "description": "Cross aimed centrally.",
+                "why_incorrect": "The cross is sent into a crowded area, making it difficult for any attacker to get a clean header.",
+                "better_alternative": "Aim the cross towards the far post, where there is a Bayern player free from any marking, by using the 'Early Cross' command (LB + Cross Button).",
+                "expected_benefit": "A far-post cross would give that player a better chance of winning the header and potentially scoring."
+            }
+        ],
+        "repeated_errors": [],
+        "missed_opportunities": []
+    },
+    "videoplaybacksample.mp4": {
+        "game": "EA FC 24",
+        "key_focus_areas": [
+            "Passing Accuracy & Decision-Making",
+            "Defensive Positioning & Awareness",
+            "Attacking Creativity & Exploiting Space",
+            "Composure & Timing in Final Third",
+            "Effective Use of Skill Moves"
+        ],
+        "mistakes": [
+            {
+                "timestamp": "00:20",
+                "description": "Attempting a lobbed through ball when a simple ground pass is available.",
+                "why_incorrect": "The lobbed through ball is too ambitious and has a low probability of success due to defenders nearby and being difficult to control.",
+                "better_alternative": "Play a short ground pass to the open player beside the ball carrier.",
+                "expected_benefit": "More control of possession and safer build-up play instead of losing the ball."
+            },
+            {
+                "timestamp": "00:34",
+                "description": "Taking too many touches while dribbling in a crowded area.",
+                "why_incorrect": "Holding onto the ball in a high-traffic area increases the risk of losing possession and allows the opponent to close down passing lanes.",
+                "better_alternative": "Use quick, one-touch passing to move the ball out of the congested zone.",
+                "expected_benefit": "Maintains possession, moves the ball more quickly and could open up space in midfield."
+            },
+            {
+                "timestamp": "00:47",
+                "description": "Attempting a low-percentage through ball pass into the box.",
+                "why_incorrect": "The passing lane is heavily congested, with multiple defenders between the passer and the intended receiver.",
+                "better_alternative": "Play a short pass to a midfielder in space outside of the box.",
+                "expected_benefit": "Maintains possession, allows for recycling play, and creates a better opportunity for a cross or a shot from distance."
+            },
+            {
+                "timestamp": "01:12",
+                "description": "Taking a shot from a very difficult angle.",
+                "why_incorrect": "Shooting from that angle, so far out from goal, has very little probability for success.",
+                "better_alternative": "Move the ball to the center or pass to a player in a better position for a shot.",
+                "expected_benefit": "The ball won't be given away cheaply. A chance for a pass to a player closer to goal will allow a better chance of scoring."
+            },
+            {
+                "timestamp": "03:05",
+                "description": "Trying to dribble past multiple defenders in a congested space inside the penalty box.",
+                "why_incorrect": "The risk of losing the ball due to a tackle or interception is very high. There are too many defenders in the area and no clear path.",
+                "better_alternative": "Pass the ball back to a teammate in a less crowded area for a better shooting opportunity or a cross.",
+                "expected_benefit": "Maintains possession and increases the chances of creating a clear shot on goal."
+            },
+            {
+                "timestamp": "03:38",
+                "description": "Forcing a pass under pressure when a safer option was available.",
+                "why_incorrect": "Passing into a crowded area under pressure often leads to interceptions and turnovers. There is a higher chance of making a mistake.",
+                "better_alternative": "Pass back to a defender or a midfielder to reset the attack and find a better angle.",
+                "expected_benefit": "Avoids losing possession in a dangerous area and allows for a more calculated approach to the attack."
+            }
+        ],
+        "repeated_errors": [
+            {
+                "pattern": "Attempting risky through balls in congested areas.",
+                "occurrences": [
+                    "00:20",
+                    "00:47",
+                    "01:44"
+                ],
+                "fix": "Prioritize shorter, safer passes to maintain possession and then look for through ball opportunities when space opens up."
+            },
+            {
+                "pattern": "Dribbling too much in tight spaces.",
+                "occurrences": [
+                    "00:34",
+                    "02:01",
+                    "03:05"
+                ],
+                "fix": "Use quick passing combinations (one-two passes) or skill moves to create space instead of relying solely on dribbling."
+            }
+        ],
+        "missed_opportunities": [
+            {
+                "timestamp": "00:55",
+                "missed_action": "Cross the ball when inside the opposition box.",
+                "expected_outcome": "Create a scoring opportunity or win a corner."
+            },
+            {
+                "timestamp": "01:37",
+                "missed_action": "Switch the play to the opposite flank.",
+                "expected_outcome": "Exploit the space on the other side and create a chance."
+            }
+        ]
+    }
+}

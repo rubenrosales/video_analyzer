@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Feedback Analysis</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash/4.17.21/lodash.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --background-color: #f8fafc;
+            --text-color: #1e293b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .api-key-section {
+            grid-column: 1 / -1;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .api-key-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .api-key-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+        }
+
+        .upload-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .file-selector {
+            margin-bottom: 20px;
+            padding: 10px;
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+        }
+
+        .video-player {
+            width: 100%;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .feedback-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+
+        .feedback-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .nav-button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .nav-button:hover {
+            background: var(--secondary-color);
+        }
+
+        .nav-button.active {
+            background: var(--secondary-color);
+        }
+
+        .feedback-content {
+            display: none;
+        }
+
+        .feedback-content.active {
+            display: block;
+        }
+
+        .feedback-item {
+            border-left: 3px solid var(--primary-color);
+            padding: 10px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .feedback-item:hover {
+            background: #f1f5f9;
+        }
+
+        .timestamp {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .key-status {
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .key-status.success {
+            background-color: #dcfce7;
+            color: #166534;
+            display: block;
+        }
+
+        .key-status.error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            display: block;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #e2e8f0;
+            border-radius: 10px;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: var(--primary-color);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s ease-in-out;
+        }
+
+        .upload-form {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="api-key-section">
+            <form id="apiKeyForm" class="api-key-form">
+                <input 
+                    type="password" 
+                    id="apiKey" 
+                    class="api-key-input" 
+                    placeholder="Enter your Google API Key"
+                    required
+                >
+                <button type="submit" class="nav-button">Save API Key</button>
+            </form>
+            <div id="keyStatus" class="key-status"></div>
+        </div>
+
+        <div id="uploadSection" class="upload-section">
+            <form id="uploadForm" class="upload-form">
+                <input type="file" id="videoFile" accept="video/*" required>
+                <button type="submit" class="nav-button">Upload Video</button>
+                <div class="progress-bar">
+                    <div class="progress-bar-fill"></div>
+                </div>
+            </form>
+            
+            <select id="fileSelector" class="file-selector">
+                <option value="">Select a video file...</option>
+            </select>
+            
+            <video id="videoPlayer" class="video-player" controls>
+                Your browser does not support the video element.
+            </video>
+        </div>
+
+        <div class="feedback-section">
+            <div class="feedback-nav">
+                <button class="nav-button active" data-section="mistakes">Mistakes</button>
+                <button class="nav-button" data-section="repeated">Repeated Errors</button>
+                <button class="nav-button" data-section="opportunities">Opportunities</button>
+            </div>
+
+            <div id="mistakes" class="feedback-content active"></div>
+            <div id="repeated" class="feedback-content"></div>
+            <div id="opportunities" class="feedback-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // Handle API key functionality
+        const apiKeyForm = document.getElementById('apiKeyForm');
+        const keyStatus = document.getElementById('keyStatus');
+        const uploadSection = document.getElementById('uploadSection');
+
+        async function checkApiKey() {
+            try {
+                const response = await fetch('/api-key/verify');
+                const data = await response.json();
+                
+                if (data.configured) {
+                    keyStatus.textContent = 'API key configured';
+                    keyStatus.className = 'key-status success';
+                    // uploadSection.classList.remove('hidden');
+                } else {
+                    keyStatus.textContent = 'Please configure your API key';
+                    keyStatus.className = 'key-status error';
+                    // uploadSection.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Error checking API key:', error);
+                keyStatus.textContent = 'Error checking API key configuration';
+                keyStatus.className = 'key-status error';
+                // uploadSection.classList.add('hidden');
+            }
+        }
+
+        apiKeyForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const apiKey = document.getElementById('apiKey').value;
+            
+            try {
+                const response = await fetch('/api-key/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ api_key: apiKey }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to save API key');
+                }
+
+                document.getElementById('apiKey').value = '';
+                await checkApiKey();
+                
+            } catch (error) {
+                keyStatus.textContent = 'Error saving API key: ' + error.message;
+                keyStatus.className = 'key-status error';
+                uploadSection.classList.add('hidden');
+            }
+        });
+
+        // Handle video upload and selection
+        const uploadForm = document.getElementById('uploadForm');
+        const fileSelector = document.getElementById('fileSelector');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const progressBar = document.querySelector('.progress-bar');
+        const progressBarFill = document.querySelector('.progress-bar-fill');
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const fileInput = document.getElementById('videoFile');
+            formData.append('video', fileInput.files[0]);
+
+            progressBar.style.display = 'block';
+            progressBarFill.style.width = '0%';
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error('Upload failed');
+                }
+
+                const data = await response.json();
+                alert('Video uploaded successfully! Analysis will begin shortly.');
+                await loadVideos();
+                
+            } catch (error) {
+                alert('Error uploading video: ' + error.message);
+            } finally {
+                progressBar.style.display = 'none';
+                uploadForm.reset();
+            }
+        });
+
+        async function loadVideos() {
+            try {
+                const response = await fetch('/videos');
+                const data = await response.json();
+                
+                fileSelector.innerHTML = '<option value="">Select a video file...</option>' +
+                    data.videos.map(video => `
+                        <option value="${video.filename}" ${video.status !== 'completed' ? 'disabled' : ''}>
+                            ${video.filename} 
+                            ${video.status !== 'completed' ? `(${video.status})` : ''}
+                        </option>
+                    `).join('');
+                
+            } catch (error) {
+                console.error('Error loading videos:', error);
+            }
+        }
+
+        fileSelector.addEventListener('change', async (e) => {
+            const selectedVideo = e.target.value;
+            if (selectedVideo) {
+                videoPlayer.src = `/video/${selectedVideo}`;
+                await loadFeedback(selectedVideo);
+            }
+        });
+
+        // Handle feedback section
+        const feedbackNav = document.querySelector('.feedback-nav');
+        const feedbackSections = document.querySelectorAll('.feedback-content');
+
+        feedbackNav.addEventListener('click', (e) => {
+            if (e.target.classList.contains('nav-button')) {
+                const targetSection = e.target.dataset.section;
+                
+                document.querySelectorAll('.nav-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                e.target.classList.add('active');
+                
+                feedbackSections.forEach(section => {
+                    section.classList.remove('active');
+                });
+                document.getElementById(targetSection).classList.add('active');
+            }
+        });
+
+        async function loadFeedback(videoFilename) {
+            try {
+                const response = await fetch(`/analysis/${videoFilename}`);
+                const data = await response.json();
+                console.log(data)
+                console.log(data.mistakes)
+                document.getElementById('mistakes').innerHTML = formatFeedback(data.mistakes);
+                // document.getElementById('repeated').innerHTML = formatFeedback(data.repeated_errors);
+                document.getElementById('opportunities').innerHTML = formatFeedback(data.missed_opportunities);
+            } catch (error) {
+                console.error('Error loading feedback:', error);
+            }
+        }
+
+        function formatFeedback(items) {
+            console.log("hello")
+            console.log(items)
+            return items.map(item => {
+                // Generate a string of key-value pairs for each item
+                const fields = Object.keys(item).map(key => {
+                    return `<div class="feedback-field"><strong>${key}:</strong> ${item[key]}</div>`;
+                }).join('');
+                
+                return `
+                    <div class="feedback-item" data-timestamp="${formatTimestamp(item.timestamp)}">
+                        <span class="timestamp">${formatTimestamp(item.timestamp)}</span>
+                        ${fields}
+                    </div>
+                `;
+            }).join('');
+        }
+
+
+        function formatTimestamp(timestamp) {
+    // Split the timestamp by the colon separator
+    const timeParts = timestamp.split(':');
+    
+    // Check if the timestamp is in the "MM:SS" or "HH:MM:SS" format
+    if (timeParts.length === 2) {
+        const minutes = parseInt(timeParts[0], 10);
+        const seconds = parseInt(timeParts[1], 10);
+        
+        // Return the formatted timestamp for "MM:SS" format
+        if (!isNaN(minutes) && !isNaN(seconds)) {
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+    } else if (timeParts.length === 3) {
+        // Handle "HH:MM:SS" format
+        const hours = parseInt(timeParts[0], 10);
+        const minutes = parseInt(timeParts[1], 10);
+        const seconds = parseInt(timeParts[2], 10);
+        
+        // Return the formatted timestamp for "HH:MM:SS" format
+        if (!isNaN(hours) && !isNaN(minutes) && !isNaN(seconds)) {
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        }
+    }
+    
+    // Return a default value if the timestamp is invalid
+    return 'Invalid Timestamp';
+}
+
+function convertToSeconds(timestamp) {
+    const timeParts = timestamp.split(':');
+    
+    let minutes = 0, seconds = 0;
+
+    // If timestamp has 2 parts, it's in MM:SS format (like "00:20")
+    if (timeParts.length === 2) {
+        minutes = parseInt(timeParts[0], 10);
+        seconds = parseInt(timeParts[1], 10);
+    } 
+    // If timestamp has 3 parts, it's in M:SS format (like "1:00:01")
+    else if (timeParts.length === 3) {
+        minutes = parseInt(timeParts[0], 10);
+        seconds = parseInt(timeParts[1], 10) + parseInt(timeParts[2], 10);
+    }
+
+    // Validate that minutes and seconds are finite numbers
+    if (isNaN(minutes) || isNaN(seconds) || !isFinite(minutes) || !isFinite(seconds)) {
+        throw new Error('Invalid timestamp format');
+    }
+
+    // Convert the time to total seconds
+    return (minutes * 60) + seconds;
+}
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.feedback-item')) {
+                console.log(e.target.closest('.feedback-item').dataset.timestamp)
+                console.log(e.target.closest('.feedback-item').dataset)
+
+                const timestamp = e.target.closest('.feedback-item').dataset.timestamp;
+
+                // let temp = timestamp.split(":");
+                // if (temp.length === 2) {
+                //     temp = temp[1];
+                // } else {
+                //     temp = temp[1];
+                // }
+
+                temp =convertToSeconds(timestamp)
+
+                videoPlayer.currentTime = temp;
+                videoPlayer.play();
+            }
+        });
+
+        // Initialize
+        checkApiKey();
+        loadVideos();
+    </script>
+</body>
+</html>
