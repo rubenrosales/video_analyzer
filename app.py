@@ -12,8 +12,8 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Required for session management
 
 class AppConfig:
-    UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', '/tmp/uploads')
-    JSON_FILE = os.environ.get('JSON_FILE', '/tmp/processed_videos.json')
+    UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', 'uploads')
+    JSON_FILE = os.environ.get('JSON_FILE', 'processed_videos.json')
     ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mov', 'mkv', 'wmv', 'flv', 'webm'}
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     
