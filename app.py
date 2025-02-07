@@ -12,7 +12,7 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Required for session management
 
 class AppConfig:
-    UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', 'uploads')
+    UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', '/uploads')
     JSON_FILE = os.environ.get('JSON_FILE', 'processed_videos.json')
     ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mov', 'mkv', 'wmv', 'flv', 'webm'}
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
@@ -142,6 +142,7 @@ def upload_file():
 @app.route('/videos')
 def list_videos():
     logging.debug("hello")
+    
     analysis_data = load_analysis_data()
     return jsonify({
         'videos': [
@@ -173,6 +174,7 @@ def load_analysis_data() -> Dict:
     try:
         with open(AppConfig.JSON_FILE, 'r') as f:
             logging.info("FFF", str(f))
+            logging.debug(AppConfig.JSON_FILE);
             return json.load(f)
     except FileNotFoundError:
         logging.info(f"no file found")
